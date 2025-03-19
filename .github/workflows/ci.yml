@@ -106,12 +106,25 @@ jobs:
                 name: build-output
                 path: build
 
-            # Step 4: Start the Server
             - name: Start React App
               run: |
-                nohup npx serve -s build &
-                sleep 5
-                curl http://localhost:3000
+                  nohup npx serve -s build -l 3000 > serve.log 2>&1 &
+                  echo "⏳ Waiting for server to start..."
+                  
+                  # ✅ Retry loop for server readiness
+                  for i in {1..10}; do
+                    if curl -s http://localhost:3000 > /dev/null; then
+                      echo "✅ Server is UP!"
+                      break
+                    else
+                      echo "🚨 Server not ready, retrying in 3s..."
+                      sleep 3
+                    fi
+                  done
+              
+                  # ✅ Show server logs for debugging
+                  echo "📝 Server logs:"
+                  cat serve.log
 
             # Step 5: Install ngrok
             - name: Install ngrok
