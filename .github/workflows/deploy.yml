@@ -18,14 +18,18 @@ jobs:
         steps:
             - name: Checkout Code
               uses: actions/checkout@v3
-    
+
             - name: Restore Node Modules
               uses: actions/cache@v3
               with:
-                path: ~/.yarn
-                key: yarn-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+                path: ~/.npm # ✅ Restore npm files
+                key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+                restore-keys: |
+                  npm-${{ runner.os }}-
+                
+            - name: Install Dependencies
+              run: npm install
 
-            # Step 3: Download Build Output
             - name: Download Build Output
               uses: actions/download-artifact@v4
               with:
@@ -35,7 +39,7 @@ jobs:
             # Step 4: Start the Server
             - name: Start React App
               run: |
-                nohup yarn serve -s build &
+                nohup npx serve -s build &
                 sleep 5
                 curl http://localhost:3000
 
@@ -46,23 +50,23 @@ jobs:
             - name: Expose with ngrok
               run: |
                 ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-                ngrok http 3000
+                ngrok http 3000 &
                 sleep 5
-                curl http://localhost:3000
+                curl http://localhost:4040/api/tunnels
 
             - name: Completed Deployment
               run: echo "Deployment Completed Successfully"
 
             - name: Get ngrok URL
-              run : |
-                URL=$(curl -s http://localhost:3000 | jq -r '.tunnels[0].public_url')
+              run: |
+                URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
                 echo "🔗 Public URL: $URL"
 
             # ✅ Keep ngrok Running
             - name: Keep Server Alive
               run: |
                 while true; do
-                    curl -s http://localhost:3000
+                    curl -s http://localhost:4040/api/tunnels
                     sleep 30
                 done
                 
