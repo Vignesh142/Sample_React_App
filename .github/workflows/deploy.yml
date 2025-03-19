@@ -12,8 +12,8 @@ jobs:
         runs-on: ubuntu-latest
 
         permissions:
-            contents: read
-            pull-requests: write
+            contents: write
+            actions: write
 
         steps:
             - name: Checkout Code
@@ -32,6 +32,9 @@ jobs:
 
             - name: Wait for Artifact
               run: sleep 6
+
+            - name: Debug Artifact List
+              run: gh run view ${{ github.run_id }} --log
 
             - name: Download Build Output
               uses: actions/download-artifact@v4
