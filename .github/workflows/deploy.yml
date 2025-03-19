@@ -35,7 +35,7 @@ jobs:
               with:
                 name: build-output
                 path: build
-                run_id: ${{ github.event.workflow_run.id }}
+                run-id: ${{ github.event.workflow_run.id }}
 
             # Step 4: Start the Server
             - name: Start React App
