@@ -67,6 +67,7 @@ jobs:
               run: ls -R build
 
     deploy:
+        needs: build
         name: Deploy React App
         runs-on: ubuntu-latest
 
