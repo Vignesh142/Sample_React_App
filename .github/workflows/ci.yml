@@ -61,3 +61,6 @@ jobs:
               with:
                 name: build-output
                 path: build
+
+            - name: Debug Build Output
+              run: ls -R build
