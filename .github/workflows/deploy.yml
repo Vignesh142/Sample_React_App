@@ -3,8 +3,7 @@ name: Deploy React App
 on: 
     workflow_run:
         workflows: ["CI Pipeline"]
-        types:
-            - completed
+        types: [completed]
     
 jobs:
     deploy:
@@ -30,13 +29,31 @@ jobs:
             - name: Install Dependencies
               run: npm install
 
-            - name: Wait for Artifact
-              run: sleep 6
-
-            - name: Debug Artifact List
+            - name: Wait and Download Artifact
               env:
-                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: gh run view ${{ github.run_id }} --log
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                echo "⏳ Waiting for artifact to be available..."
+                for i in {1..5}; do
+                  if gh run view ${{ github.event.workflow_run.id }} --log; then
+                    echo "✅ Artifact is ready, downloading..."
+                    break
+                  else
+                    echo "🚨 Artifact not ready yet, retrying in 5s..."
+                    sleep 5
+                  fi
+                done
+      
+            # ✅ Download artifact with retry
+            - name: Download Build Output
+              uses: actions/download-artifact@v4
+              with:
+                name: build-output
+                path: build
+      
+            # ✅ Confirm artifact files exist
+            - name: Debug Downloaded Files
+              run: ls -R build || echo "🚨 No files downloaded!"
 
             - name: Download Build Output
               uses: actions/download-artifact@v4
